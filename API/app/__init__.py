@@ -1,10 +1,18 @@
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
+db = SQLAlchemy()
 
-@app.route('/Hello/', methods=['GET', 'POST'])
-def welcome():
-    return "Hello World!"
+def create_app():
+    app = Flask(__name__) # Create instance of Flask application
 
-if __name__ == '__main__':
-    app.run(debug=True)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///energy_meter.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    db.init_app(app)
+
+    with app.app_context():
+        from . import models
+        db.create_all()
+    
+    return app
