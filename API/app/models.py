@@ -2,6 +2,7 @@ from . import db
 
 class Device(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), unique=False, nullable=True)
     api_key = db.relationship('APIKey', backref='device', uselist=False)
     voltages = db.relationship('Voltage', backref='device')
     currents = db.relationship('Current', backref='device')
