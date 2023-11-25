@@ -11,7 +11,7 @@ NOT_FOUND   = 404
 def register_routes(app):
     @app.route('/', methods=['GET'])
     def home():
-        return "Test!"
+        return "Home!"
 
     # Route that returns the voltage measurement 
     # closest to the date and time given in the 
@@ -20,40 +20,17 @@ def register_routes(app):
     def get_voltage_closest():
         timestamp = request.args.get('timestamp')
 
-        # Check that a timestamp argument has been given in the request
-        # and check that timestamp is valid
-        if timestamp:
-            try:
-                requested_time = datetime.fromisoformat(timestamp)
-            except ValueError:
-                return jsonify({'error': 'Invalid argument'}), BAD_REQUEST
-        else:
-            return jsonify({'error': 'timestamp required'}), BAD_REQUEST
-        
-        # Query the database for the closest timstamp above and below 
-        # the timestamp given in the request
-        closest_before = Voltage.query.filter(Voltage.meas_time <= requested_time)\
-                                    .order_by(Voltage.meas_time.desc())\
-                                    .first()
-        closest_after = Voltage.query.filter(Voltage.meas_time >= requested_time)\
-                                    .order_by(Voltage.meas_time.asc())\
-                                    .first()
+        resp = get_closest_meas(Voltage, timestamp)
 
-        # Get the closest timestamp of the two
-        if closest_before and closest_after:
-            diff_before = requested_time - closest_before.meas_time
-            diff_after = closest_after.meas_time - requested_time
-            closest_reading = closest_before if diff_before < diff_after else closest_after
-        else:
-            return jsonify({'message': 'Not found'}), NOT_FOUND
+        if not isinstance(resp, Voltage):
+            return resp
 
-        # Return the reading in JSON format
         return jsonify({
-            'id': closest_reading.id,
-            'meas': closest_reading.meas,
-            'meas_time': closest_reading.meas_time,
-            'device_id': closest_reading.device_id
-        })
+            'id': resp.id,
+            'meas': resp.meas,
+            'meas_time': resp.meas_time,
+            'device_id': resp.device_id
+        }), 200
 
 
     # Route that returns the current measurement 
@@ -63,40 +40,18 @@ def register_routes(app):
     def get_current_closest():
         timestamp = request.args.get('timestamp')
 
-        # Check that a timestamp argument has been given in the request
-        # and check that timestamp is valid
-        if timestamp:
-            try:
-                requested_time = datetime.fromisoformat(timestamp)
-            except ValueError:
-                return jsonify({'error': 'Invalid argument'}), BAD_REQUEST
-        else:
-            return jsonify({'error': 'timestamp required'}), BAD_REQUEST
-        
-        # Query the database for the closest timstamp above and below 
-        # the timestamp given in the request
-        closest_before = Current.query.filter(Current.meas_time <= requested_time)\
-                                    .order_by(Current.meas_time.desc())\
-                                    .first()
-        closest_after = Current.query.filter(Current.meas_time >= requested_time)\
-                                    .order_by(Current.meas_time.asc())\
-                                    .first()
+        resp = get_closest_meas(Current, timestamp)
 
-        # Get the closest timestamp of the two
-        if closest_before and closest_after:
-            diff_before = requested_time - closest_before.meas_time
-            diff_after = closest_after.meas_time - requested_time
-            closest_entry = closest_before if diff_before < diff_after else closest_after
-        else:
-            return jsonify({'message': 'Not found'}), NOT_FOUND
+        if not isinstance(resp, Current):
+            return resp
 
         # Return the reading in JSON format
         return jsonify({
-            'id': closest_entry.id,
-            'meas': closest_entry.meas,
-            'meas_time': closest_entry.meas_time,
-            'device_id': closest_entry.device_id
-        })
+            'id': resp.id,
+            'meas': resp.meas,
+            'meas_time': resp.meas_time,
+            'device_id': resp.device_id
+        }), 200
 
     # Route to POST a voltage measurement
     @app.route('/voltage', methods=['POST'])
@@ -108,9 +63,9 @@ def register_routes(app):
             db.session.add(voltage)
             db.session.commit() 
         except:
-            return jsonify({'message': 'Inalid request'}), BAD_REQUEST
+            return jsonify({'message': 'Inalid request'}), 400
 
-        return jsonify({'message': 'Success'}), CREATED
+        return jsonify({'message': 'Success'}), 201
 
     # Route to POST a current measurement
     @app.route('/current', methods=['POST'])
@@ -122,6 +77,38 @@ def register_routes(app):
             db.session.add(voltage)
             db.session.commit() 
         except:
-            return jsonify({'message': 'Inalid request'}), BAD_REQUEST
+            return jsonify({'message': 'Inalid request'}), 400
 
-        return jsonify({'message': 'Success'}), CREATED
+        return jsonify({'message': 'Success'}), 201
+    
+
+def get_closest_meas(model, timestamp):
+    # Check that a timestamp argument has been given in the request
+    # and check that timestamp is valid
+    if timestamp:
+        try:
+            requested_time = datetime.fromisoformat(timestamp)
+        except ValueError:
+            return jsonify({'error': 'Invalid argument'}), BAD_REQUEST
+    else:
+        return jsonify({'error': 'timestamp required'}), BAD_REQUEST
+    
+    # Query the database for the closest timstamp above and below 
+    # the timestamp given in the request
+    closest_before = model.query.filter(model.meas_time <= requested_time)\
+                                .order_by(model.meas_time.desc())\
+                                .first()
+    closest_after = model.query.filter(model.meas_time >= requested_time)\
+                                .order_by(model.meas_time.asc())\
+                                .first()
+
+    # Get the closest timestamp of the two
+    if closest_before and closest_after:
+        diff_before = requested_time - closest_before.meas_time
+        diff_after = closest_after.meas_time - requested_time
+        closest_reading = closest_before if diff_before < diff_after else closest_after
+    else:
+        return jsonify({'message': 'Not found'}), NOT_FOUND
+
+    # Return the reading in JSON format
+    return closest_reading
