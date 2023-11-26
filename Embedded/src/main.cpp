@@ -1,10 +1,16 @@
 #include <Arduino.h>
 #include <WiFi.h>
+#include <HTTPClient.h>
 #include "config.h"
 
+const String VOLTAGE_POST_ENDPOINT = "http://127.0.0.1:5000/voltage";
+const String CURRENT_POST_ENDPOINT = "127.0.0.1:5000/current";
+
+HTTPClient http;
+
 void setup() {
-  Serial.begin(115200); // Open serial connection (To be removed)
-  pinMode(GPIO_NUM_22, OUTPUT);
+  Serial.begin(115200); // Open serial connection (For debugging purposes)
+  pinMode(GPIO_NUM_22, OUTPUT); // Set the relay pin to output for control
   digitalWrite(GPIO_NUM_22, HIGH); // Activate relay to close circuit as default.
 
   WiFi.begin(ssid, password);
@@ -36,8 +42,20 @@ float calculate_current(int rawData) {
 }
 
 void loop() {
-  int voltageSensorRaw = analogRead(GPIO_NUM_36);
-  Serial.println(calculate_voltage(voltageSensorRaw));
+  float voltage = calculate_voltage(analogRead(GPIO_NUM_36));
+  
+  if (WiFi.status() == WL_CONNECTED) {
+    http.begin(VOLTAGE_POST_ENDPOINT);
+    http.addHeader("Content-type", "application/json");
+
+    char requestString[128];
+    sprintf(requestString, "{\"meas\":%d, \"device_id\":%d}", voltage, device_id);
+    int httpResponseCode = http.POST(requestString);
+    Serial.println(httpResponseCode);
+    http.end();
+  }
+
+  Serial.println(voltage);
 
   int currentSensorRaw = analogRead(GPIO_NUM_39);
   Serial.println(calculate_current(currentSensorRaw));
