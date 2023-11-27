@@ -3,7 +3,7 @@
 #include <HTTPClient.h>
 #include "config.h"
 
-const String VOLTAGE_POST_ENDPOINT = "http://127.0.0.1:5000/voltage";
+const String VOLTAGE_POST_ENDPOINT = "http://192.168.0.105:5000/voltage";
 const String CURRENT_POST_ENDPOINT = "127.0.0.1:5000/current";
 
 void setup() {
@@ -48,25 +48,16 @@ void loop() {
     http.addHeader("Content-type", "application/json");
 
     char requestString[128];
-    sprintf(requestString, "{\"meas\":%d, \"device_id\":%d}", voltage, device_id);
-    // int httpResponseCode = http.POST(requestString);
-    // Serial.println(httpResponseCode);
-    http.end();
-  }
-
-  if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
-    http.begin("http://httpbin.org/get");
-
-    int httpResponseCode = http.GET();
+    sprintf(requestString, "{\"meas\":%.2f, \"device_id\":%d}", voltage, device_id);
+    int httpResponseCode = http.POST(requestString);
     Serial.println(httpResponseCode);
     http.end();
   }
 
-  // Serial.println(voltage);
+  Serial.println(voltage);
 
   int currentSensorRaw = analogRead(GPIO_NUM_39);
-  // Serial.println(calculate_current(currentSensorRaw));
+  Serial.println(calculate_current(currentSensorRaw));
 
   delay(1000);
 
