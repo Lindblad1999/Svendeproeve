@@ -4,7 +4,7 @@
 #include "config.h"
 
 const String VOLTAGE_POST_ENDPOINT = "http://192.168.0.105:5000/voltage";
-const String CURRENT_POST_ENDPOINT = "127.0.0.1:5000/current";
+const String CURRENT_POST_ENDPOINT = "http://192.168.0.105:5000/current";
 
 void setup() {
   Serial.begin(115200); // Open serial connection (For debugging purposes)
@@ -56,8 +56,20 @@ void loop() {
 
   Serial.println(voltage);
 
-  int currentSensorRaw = analogRead(GPIO_NUM_39);
-  Serial.println(calculate_current(currentSensorRaw));
+  float current = calculate_current(analogRead(GPIO_NUM_39));
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(CURRENT_POST_ENDPOINT);
+    http.addHeader("Content-type", "application/json");
+
+    char requestString[128];
+    sprintf(requestString, "{\"meas\":%.2f, \"device_id\":%d}", current, device_id);
+    int httpResponseCode = http.POST(requestString);
+    Serial.println(httpResponseCode);
+    http.end();
+  }
+
+  Serial.println(current);
 
   delay(1000);
 
