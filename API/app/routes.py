@@ -59,7 +59,7 @@ def register_routes(app):
         data = request.get_json()
 
         try:
-            voltage = Voltage(meas=float(data['meas']), meas_time=datetime.now(), device_id=data['device_id'])
+            voltage = Voltage(meas=float(data['meas']), meas_time=datetime.now(), device_id=int(data['device_id']))
             db.session.add(voltage)
             db.session.commit() 
         except:
