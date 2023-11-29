@@ -75,7 +75,7 @@ def register_routes(app):
 
         try:
             current = Current(meas=float(data['meas']), meas_time=datetime.now(), device_id=int(data['device_id']))
-            db.session.add(Current)
+            db.session.add(current)
             db.session.commit() 
         except:
             return jsonify({'message': 'Inalid request'}), 400
