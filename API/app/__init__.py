@@ -8,7 +8,8 @@ def create_app():
     app = Flask(__name__) # Create instance of Flask application
     CORS(app)
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///energy_meter.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgresql-colorful-40720
+'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
