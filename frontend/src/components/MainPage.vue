@@ -25,17 +25,10 @@ export default {
     },
     methods:{
         getVoltage() {
-            let now = new Date();
-            let year = now.getFullYear();
-            let month = String(now.getMonth() + 1).padStart(2, '0');
-            let day = String(now.getDate()).padStart(2, '0');
-            let hours = String(now.getHours()).padStart(2, '0');
-            let minutes = String(now.getMinutes()).padStart(2, '0');
-            let seconds = String(now.getSeconds()).padStart(2, '0');
-            this.dateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+            this.dateTime = new Date().toISOString().replace(".", ":").slice(0, -5);
             axios.get(`${API_URL}/voltage/closest?timestamp=${this.dateTime}`)
                 .then(response => this.voltage = response.data.meas)
-        }
+            }
     }
 }
 </script>
