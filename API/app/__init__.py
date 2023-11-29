@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+import os
 
 db = SQLAlchemy()
 
@@ -8,7 +9,7 @@ def create_app():
     app = Flask(__name__) # Create instance of Flask application
     CORS(app)
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgresql-colorful-40720
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 '
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
