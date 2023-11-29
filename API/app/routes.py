@@ -74,7 +74,7 @@ def register_routes(app):
         data = request.get_json()
 
         try:
-            current = Current(meas=float(data['meas']), meas_time=datetime.now(), device_id=data['device_id'])
+            current = Current(meas=float(data['meas']), meas_time=datetime.now(), device_id=int(data['device_id']))
             db.session.add(Current)
             db.session.commit() 
         except:
