@@ -1,2 +1,2 @@
-const TEST_API = 'https://httpbin.org/get';
-export default TEST_API;
+const API_URL = 'https://svendeproeve-api-7b4ec1c0ab8f.herokuapp.com/';
+export default API_URL;
