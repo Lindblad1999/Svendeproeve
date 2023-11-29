@@ -62,8 +62,9 @@ def register_routes(app):
             voltage = Voltage(meas=float(data['meas']), meas_time=datetime.now(), device_id=int(data['device_id']))
             db.session.add(voltage)
             db.session.commit() 
-        except:
-            return jsonify({'message': 'Inalid request'}), 400
+        except Exception as e:
+            app.logger.error(f"Error: {str(e)}")
+            return jsonify({'message': 'Invalid request'}), 400
 
         return jsonify({'message': 'Success'}), 201
 
@@ -73,8 +74,8 @@ def register_routes(app):
         data = request.get_json()
 
         try:
-            voltage = Current(meas=float(data['meas']), meas_time=datetime.now(), device_id=data['device_id'])
-            db.session.add(voltage)
+            current = Current(meas=float(data['meas']), meas_time=datetime.now(), device_id=data['device_id'])
+            db.session.add(Current)
             db.session.commit() 
         except:
             return jsonify({'message': 'Inalid request'}), 400
