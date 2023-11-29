@@ -108,6 +108,10 @@ def get_closest_meas(model, timestamp):
         diff_before = requested_time - closest_before.meas_time
         diff_after = closest_after.meas_time - requested_time
         closest_reading = closest_before if diff_before < diff_after else closest_after
+    elif closest_before:
+        closest_reading = closest_before
+    elif closest_after:
+        closest_reading = closest_after
     else:
         return jsonify({'message': 'Not found'}), NOT_FOUND
 
