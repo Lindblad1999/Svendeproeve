@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from . import db
-from .models import Voltage, Current
+from .models import Voltage, Current, Relay
 from datetime import datetime
 
 OK          = 200
@@ -132,10 +132,36 @@ def register_routes(app):
             db.session.add(current)
             db.session.commit() 
         except:
-            return jsonify({'message': 'Inalid request'}), BAD_REQUEST
+            return jsonify({'message': 'Invalid request'}), BAD_REQUEST
 
         return jsonify({'message': 'Success'}), CREATED
     
+    
+    @app.route('/relay/status', methods=['POST'])
+    def post_relay_status():
+        data = request.get_json()
+
+        try:
+            relay = Relay(state=data['state'], log_time=datetime.now(), device_id=int(data['device_id']))
+            db.session.add(relay)
+            db.session.commit()
+        except:
+            return jsonify({'message': 'Invalid request'}), BAD_REQUEST
+        
+        return jsonify({'message': 'Success'}), CREATED
+
+
+    @app.route('/relay/status', methods=['GET'])
+    def get_relay_status_latest():
+        data = Relay.query.order_by(Relay.id.desc()).first()
+
+        # Return the status in JSON format
+        return jsonify({
+            'id': data.id,
+            'state': data.state,
+            'log_time': data.log_time,
+            'device_id': data.device_id
+        }), 200
 
 def get_closest_meas(model, timestamp):
     # Check that a timestamp argument has been given in the request
