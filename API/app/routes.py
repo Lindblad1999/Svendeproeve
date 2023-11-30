@@ -54,23 +54,20 @@ def register_routes(app):
         }), 200
     
 
-    # Route that returns all entries since the
-    # date end time given in the GET request
-    @app.route('/voltage/since', methods=['GET'])
+    # Route that returns x latest entries of Voltage
+    @app.route('/voltage/latest', methods=['GET'])
     def get_voltage_since():
-        timestamp = request.args.get('timestamp')
+        amount = request.args.get('amount')
 
-        # Check that a timestamp argument has been given in the request
-        # and check that timestamp is valid
-        if timestamp:
-            try:
-                requested_time = datetime.fromisoformat(timestamp)
-            except ValueError:
+        # Check that an amount argument has been given in the request
+        # and check that amount is an integer
+        if amount:
+            if not amount.isdigit():
                 return jsonify({'error': 'Invalid argument'}), BAD_REQUEST
         else:
             return jsonify({'error': 'timestamp required'}), BAD_REQUEST
         
-        data = Voltage.query.filter(Voltage.meas_time > requested_time).all()
+        data = Voltage.query.order_by(Voltage.id.desc()).limit(int(amount))
 
         data_list = [{
             'id': d.id,
@@ -83,23 +80,20 @@ def register_routes(app):
         return jsonify(data_list), OK
     
 
-    # Route that returns all entries since the
-    # date end time given in the GET request
-    @app.route('/current/since', methods=['GET'])
+    # Route that returns x latest entries of Current
+    @app.route('/current/latest', methods=['GET'])
     def get_current_since():
-        timestamp = request.args.get('timestamp')
+        amount = request.args.get('amount')
 
-        # Check that a timestamp argument has been given in the request
-        # and check that timestamp is valid
-        if timestamp:
-            try:
-                requested_time = datetime.fromisoformat(timestamp)
-            except ValueError:
+        # Check that an amount argument has been given in the request
+        # and check that amount is an integer
+        if amount:
+            if not amount.isdigit():
                 return jsonify({'error': 'Invalid argument'}), BAD_REQUEST
         else:
             return jsonify({'error': 'timestamp required'}), BAD_REQUEST
         
-        data = Current.query.filter(Current.meas_time > requested_time).all()
+        data = Current.query.order_by(Current.id.desc()).limit(int(amount))
 
         data_list = [{
             'id': d.id,
