@@ -29,6 +29,7 @@
 <script>
 import API_URL from '@/constants'
 const DEVICE_ID = 2;
+const API_KEY = "secretkey2";
 import axios from 'axios'
 export default {
     data() {
@@ -60,12 +61,12 @@ export default {
         },
         getLatestVoltage() {
             this.dateTime = new Date().toISOString().replace(".", ":").slice(0, -5);
-            axios.get(`${API_URL}/voltage/closest?timestamp=${this.dateTime}`)
+            axios.get(`${API_URL}/voltage/closest?apikey=${API_KEY}&timestamp=${this.dateTime}`)
                 .then(response => this.latestVoltage = response.data.meas)
         },
         getLatestCurrent() {
             this.dateTime = new Date().toISOString().replace(".", ":").slice(0, -5);
-            axios.get(`${API_URL}/current/closest?timestamp=${this.dateTime}`)
+            axios.get(`${API_URL}/current/closest?apikey=${API_KEY}&timestamp=${this.dateTime}`)
                 .then(response => this.latestCurrent = Math.abs(response.data.meas))
         },
         getEnergyPrice() {
@@ -83,8 +84,8 @@ export default {
 
             // Use Promise to ensure that the API calls are completed before having to use the data they return
             Promise.all([
-                axios.get(`${API_URL}/voltage/latest?amount=${getAmount}`),    
-                axios.get(`${API_URL}/current/latest?amount=${getAmount}`)
+                axios.get(`${API_URL}/voltage/latest?apikey=${API_KEY}&amount=${getAmount}`),    
+                axios.get(`${API_URL}/current/latest?apikey=${API_KEY}&amount=${getAmount}`)
             ]).then(([voltageResponse, currentResponse]) => {
                 let topVoltages = voltageResponse.data;
                 let topCurrents = currentResponse.data;
@@ -103,10 +104,10 @@ export default {
                 state: this.relayStatus === "ON" ? 1 : 0, 
                 device_id: DEVICE_ID
             };
-            axios.post(`${API_URL}/relay/status`, postData);
+            axios.post(`${API_URL}/relay/status?apikey=${API_KEY}`, postData);
         },
         getRelayStatus(){
-            axios.get(`${API_URL}/relay/status`)
+            axios.get(`${API_URL}/relay/status?apikey=${API_KEY}`)
                 .then( response => {
                     if (response.data.state){
                         this.relayStatus = "OFF";
