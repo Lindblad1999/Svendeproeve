@@ -15,6 +15,10 @@
             <h3 class="current-device-cost-content">Current device cost</h3>
             <p class="current-device-cost-content">{{ deviceCost }} kr.</p>
         </div>
+        <div id="total-device-cost">
+            <h2 class="total-device-cost-content">Total device cost</h2>
+            <p class="total-device-cost-content">{{ totalCost }} kr.</p>
+        </div>
     </div>
 </template>
 
@@ -31,13 +35,16 @@ export default {
             latestCurrent: 0,
             latestWattage: 0,
             energyPrice: 0,
-            deviceCost: 0
+            deviceCost: 0,
+            totalCost: 0
         };
     },
     mounted() {
         setInterval(this.getLatestWattage, 1000);
         this.getEnergyPrice();
-        setInterval(this.currentDeviceCost, 1000)
+        setInterval(this.currentDeviceCost, 1000);
+        this.calcTotalCost();
+        setInterval(this.updateTotalCost, 1000);
     },
     methods:{
         getLatestVoltage() {
@@ -64,6 +71,26 @@ export default {
         currentDeviceCost() {
             let kwh = this.latestWattage / 3600;
             this.deviceCost = (kwh * this.energyPrice).toFixed(6);
+        },
+        calcTotalCost(){
+            let getAmount = 100;
+
+            // Use Promise to ensure that the API calls are completed before having to use the data they return
+            Promise.all([
+                axios.get(`${API_URL}/voltage/latest?amount=${getAmount}`),    
+                axios.get(`${API_URL}/current/latest?amount=${getAmount}`)
+            ]).then(([voltageResponse, currentResponse]) => {
+                let topVoltages = voltageResponse.data;
+                let topCurrents = currentResponse.data;
+                let totalWattage = 0;
+                for (let i = 0; i < getAmount; i++) {
+                    totalWattage += topVoltages[i].meas * topCurrents[i].meas;
+                }
+                this.totalCost = (totalWattage / 3600) * this.energyPrice;
+            })
+        },
+        updateTotalCost(){
+            this.totalCost = (parseFloat(this.totalCost) + parseFloat(this.deviceCost)).toFixed(6);
         }
     }
 }
@@ -113,6 +140,17 @@ export default {
     }
 
     .current-device-cost-content {
+        text-align: center;
+    }
+
+    #total-device-cost {
+        background-color: darkred;
+        width: 60%;
+        margin: 0 auto;
+        border-radius: 25px;
+    }
+
+    .total-device-cost-content {
         text-align: center;
     }
 </style>
