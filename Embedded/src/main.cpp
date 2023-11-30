@@ -10,6 +10,7 @@ const String CURRENT_POST_ENDPOINT = "https://svendeproeve-api-7b4ec1c0ab8f.hero
 const int RELAY_PIN = GPIO_NUM_22;
 const int CURRENT_PIN = GPIO_NUM_39;
 const int VOLTAGE_PIN = GPIO_NUM_36;
+const String API_KEY = "secretkey1";
 
 // Code will be run once, in the startup
 void setup() {
@@ -29,7 +30,7 @@ void setup() {
   if (WiFi.status() == WL_CONNECTED) {
     // Start a HTTP connection to the API /relay/status endpoint 
     HTTPClient http;
-    http.begin(API_ADDRESS + "/relay/status");
+    http.begin(API_ADDRESS + "/relay/status?apikey=" + API_KEY);
     http.addHeader("Content-type", "application/json");
 
     // Format the data to be posted to JSON format, and send POST request
@@ -85,7 +86,7 @@ void loop() {
   // Send a POST request to the API with a voltage measurement
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    http.begin(VOLTAGE_POST_ENDPOINT);
+    http.begin(VOLTAGE_POST_ENDPOINT + "?apikey=" + API_KEY);
     http.addHeader("Content-type", "application/json");
 
     char requestString[128];
@@ -98,7 +99,7 @@ void loop() {
   float current = calculate_current(analogRead(CURRENT_PIN));
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    http.begin(CURRENT_POST_ENDPOINT);
+    http.begin(CURRENT_POST_ENDPOINT + "?apikey=" + API_KEY);
     http.addHeader("Content-type", "application/json");
 
     char requestString[128];
@@ -109,7 +110,7 @@ void loop() {
 
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    http.begin(API_ADDRESS + "/relay/status");
+    http.begin(API_ADDRESS + "/relay/status?apikey=" + API_KEY);
 
     int httpResponseCode = http.GET();
     if (httpResponseCode > 0) {
