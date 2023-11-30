@@ -1,17 +1,32 @@
 from flask import request, jsonify
 from . import db
-from .models import Voltage, Current, Relay
+from .models import Voltage, Current, Relay, APIKey
 from datetime import datetime
+import hashlib
 
 OK          = 200
 CREATED     = 201
 BAD_REQUEST = 400
 NOT_FOUND   = 404
 
+def verify_ApiKey(key):
+    hash_object = hashlib.sha256() # Create new instance of a hash object
+    hash_object.update(key.encode()) # Inserts the key into the hash object
+    hashed_key = hash_object.hexdigest() # Returns the hashed key in hex format
+
+    # Check if API key exists in the database
+    api_key_exists = APIKey.query.filter_by(api_key=hashed_key).first()
+
+    if api_key_exists:
+        return True
+    else:
+        return False
+
 def register_routes(app):
     @app.route('/', methods=['GET'])
     def home():
         return "Energy meter home!"
+
 
     # Route that returns the voltage measurement 
     # closest to the date and time given in the 
@@ -19,6 +34,11 @@ def register_routes(app):
     @app.route('/voltage/closest', methods=['GET'])
     def get_voltage_closest():
         timestamp = request.args.get('timestamp')
+        apikey = request.args.get('apikey')
+
+        if verify_ApiKey(apikey) == False:
+            return jsonify({'message': 'Unauthorized'})
+
 
         resp = get_closest_meas(Voltage, timestamp)
 
@@ -39,6 +59,10 @@ def register_routes(app):
     @app.route('/current/closest', methods=['GET'])
     def get_current_closest():
         timestamp = request.args.get('timestamp')
+        apikey = request.args.get('apikey')
+
+        if verify_ApiKey(apikey) == False:
+            return jsonify({'message': 'Unauthorized'})
 
         resp = get_closest_meas(Current, timestamp)
 
@@ -58,6 +82,10 @@ def register_routes(app):
     @app.route('/voltage/latest', methods=['GET'])
     def get_voltage_since():
         amount = request.args.get('amount')
+        apikey = request.args.get('apikey')
+
+        if verify_ApiKey(apikey) == False:
+            return jsonify({'message': 'Unauthorized'})
 
         # Check that an amount argument has been given in the request
         # and check that amount is an integer
@@ -84,6 +112,10 @@ def register_routes(app):
     @app.route('/current/latest', methods=['GET'])
     def get_current_since():
         amount = request.args.get('amount')
+        apikey = request.args.get('apikey')
+
+        if verify_ApiKey(apikey) == False:
+            return jsonify({'message': 'Unauthorized'})
 
         # Check that an amount argument has been given in the request
         # and check that amount is an integer
@@ -109,6 +141,11 @@ def register_routes(app):
     # Route to POST a voltage measurement
     @app.route('/voltage', methods=['POST'])
     def post_voltage():
+        apikey = request.args.get('apikey')
+
+        if verify_ApiKey(apikey) == False:
+            return jsonify({'message': 'Unauthorized'})
+
         data = request.get_json()
 
         try:
@@ -124,6 +161,11 @@ def register_routes(app):
     # Route to POST a current measurement
     @app.route('/current', methods=['POST'])
     def post_current():
+        apikey = request.args.get('apikey')
+
+        if verify_ApiKey(apikey) == False:
+            return jsonify({'message': 'Unauthorized'})
+
         data = request.get_json()
 
         try:
@@ -139,6 +181,11 @@ def register_routes(app):
     # Route to POST a new relay status
     @app.route('/relay/status', methods=['POST'])
     def post_relay_status():
+        apikey = request.args.get('apikey')
+
+        if verify_ApiKey(apikey) == False:
+            return jsonify({'message': 'Unauthorized'})
+
         data = request.get_json()
 
         try:
@@ -154,6 +201,11 @@ def register_routes(app):
     # Route to GET the latest relay status
     @app.route('/relay/status', methods=['GET'])
     def get_relay_status_latest():
+        apikey = request.args.get('apikey')
+
+        if verify_ApiKey(apikey) == False:
+            return jsonify({'message': 'Unauthorized'})
+
         data = Relay.query.order_by(Relay.id.desc()).first()
 
         # Return the status in JSON format
