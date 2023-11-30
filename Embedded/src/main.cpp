@@ -3,8 +3,8 @@
 #include <HTTPClient.h>
 #include "config.h"
 
-const String VOLTAGE_POST_ENDPOINT = "http://192.168.0.105:5000/voltage";
-const String CURRENT_POST_ENDPOINT = "http://192.168.0.105:5000/current";
+const String VOLTAGE_POST_ENDPOINT = "https://svendeproeve-api-7b4ec1c0ab8f.herokuapp.com/voltage";
+const String CURRENT_POST_ENDPOINT = "https://svendeproeve-api-7b4ec1c0ab8f.herokuapp.com/current";
 
 void setup() {
   Serial.begin(115200); // Open serial connection (For debugging purposes)
@@ -33,7 +33,7 @@ float calculate_voltage(int rawData) {
 }
 
 float calculate_current(int rawData) {
-  float current = (float)rawData - 2500;
+  float current = (float)rawData - 2200;
   current = current / 4096 * 3.3;
   
   return current;
@@ -41,7 +41,6 @@ float calculate_current(int rawData) {
 
 void loop() {
   float voltage = calculate_voltage(analogRead(GPIO_NUM_36));
-  
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
     http.begin(VOLTAGE_POST_ENDPOINT);
@@ -50,11 +49,8 @@ void loop() {
     char requestString[128];
     sprintf(requestString, "{\"meas\":%.2f, \"device_id\":%d}", voltage, device_id);
     int httpResponseCode = http.POST(requestString);
-    Serial.println(httpResponseCode);
     http.end();
   }
-
-  Serial.println(voltage);
 
   float current = calculate_current(analogRead(GPIO_NUM_39));
   if (WiFi.status() == WL_CONNECTED) {
@@ -65,11 +61,8 @@ void loop() {
     char requestString[128];
     sprintf(requestString, "{\"meas\":%.2f, \"device_id\":%d}", current, device_id);
     int httpResponseCode = http.POST(requestString);
-    Serial.println(httpResponseCode);
     http.end();
   }
-
-  Serial.println(current);
 
   delay(1000);
 
