@@ -7,14 +7,18 @@
 const String API_ADDRESS = "https://svendeproeve-api-7b4ec1c0ab8f.herokuapp.com";
 const String VOLTAGE_POST_ENDPOINT = "https://svendeproeve-api-7b4ec1c0ab8f.herokuapp.com/voltage";
 const String CURRENT_POST_ENDPOINT = "https://svendeproeve-api-7b4ec1c0ab8f.herokuapp.com/current";
+const int RELAY_PIN = GPIO_NUM_22;
+const int CURRENT_PIN = GPIO_NUM_39;
+const int VOLTAGE_PIN = GPIO_NUM_36;
 
+// Code will be run once, in the startup
 void setup() {
   Serial.begin(115200); // Open serial connection (For debugging purposes)
-  pinMode(GPIO_NUM_22, OUTPUT); // Set the relay pin to output for control
-  digitalWrite(GPIO_NUM_22, HIGH); // Activate relay to close circuit as default.
+  pinMode(RELAY_PIN, OUTPUT); // Set the relay pin to output for control
+  digitalWrite(RELAY_PIN, HIGH); // Activate relay to close circuit as default.
 
+  // Start a connection to WiFi and wait for a connection to be established
   WiFi.begin(ssid, password);
-
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
@@ -23,16 +27,17 @@ void setup() {
 
   // Post a relay status log that tells relay is ON
   if (WiFi.status() == WL_CONNECTED) {
-  HTTPClient http;
-  http.begin(API_ADDRESS + "/relay/status");
-  http.addHeader("Content-type", "application/json");
+    // Start a HTTP connection to the API /relay/status endpoint 
+    HTTPClient http;
+    http.begin(API_ADDRESS + "/relay/status");
+    http.addHeader("Content-type", "application/json");
 
-  char requestString[128];
-  sprintf(requestString, "{\"state\":%d, \"device_id\":%d}", 1, device_id);
-  int httpResponseCode = http.POST(requestString);
-  http.end();
-}
-  
+    // Format the data to be posted to JSON format, and send POST request
+    char requestString[128];
+    sprintf(requestString, "{\"state\":%d, \"device_id\":%d}", 1, device_id);
+    int httpResponseCode = http.POST(requestString);
+    http.end(); // Close HTTP connection
+  }
 }
 
 float calculate_voltage(int rawData) {
@@ -50,7 +55,7 @@ float calculate_current(int rawData) {
   float current;
   // Check if the relay PIN is high or low
   // If high, calculate the current. If low return 0, as the sensor is too unprecise. 
-  if (digitalRead(GPIO_NUM_22) == 1){
+  if (digitalRead(RELAY_PIN) == 1){
     current = (float)rawData - 2200;
     current = current / 4096 * 3.3;
   } else {
@@ -66,15 +71,18 @@ void handle_relay_get(String response){
 
   int state = doc["state"];
   if (state == 1){
-    digitalWrite(GPIO_NUM_22, HIGH);
+    digitalWrite(RELAY_PIN, HIGH);
   } 
   else if (state == 0) {
-    digitalWrite(GPIO_NUM_22, LOW);
+    digitalWrite(RELAY_PIN, LOW);
   }
 }
 
+// Main loop that runs continuously
 void loop() {
-  float voltage = calculate_voltage(analogRead(GPIO_NUM_36));
+  // Read voltage sensor measurement and calculate the voltage from the raw ADC value.
+  float voltage = calculate_voltage(analogRead(VOLTAGE_PIN)); 
+  // Send a POST request to the API with a voltage measurement
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
     http.begin(VOLTAGE_POST_ENDPOINT);
@@ -86,7 +94,8 @@ void loop() {
     http.end();
   }
 
-  float current = calculate_current(analogRead(GPIO_NUM_39));
+  // Read current sensor measurement and calculate the current from the raw ADC value.
+  float current = calculate_current(analogRead(CURRENT_PIN));
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
     http.begin(CURRENT_POST_ENDPOINT);
@@ -99,14 +108,14 @@ void loop() {
   }
 
   if (WiFi.status() == WL_CONNECTED) {
-  HTTPClient http;
-  http.begin(API_ADDRESS + "/relay/status");
+    HTTPClient http;
+    http.begin(API_ADDRESS + "/relay/status");
 
-  int httpResponseCode = http.GET();
-  if (httpResponseCode > 0) {
-    handle_relay_get(http.getString());
-  }
-  http.end();
+    int httpResponseCode = http.GET();
+    if (httpResponseCode > 0) {
+      handle_relay_get(http.getString());
+    }
+    http.end();
 }
 
   delay(1000);

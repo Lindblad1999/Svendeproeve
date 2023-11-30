@@ -65,7 +65,7 @@ def register_routes(app):
             if not amount.isdigit():
                 return jsonify({'error': 'Invalid argument'}), BAD_REQUEST
         else:
-            return jsonify({'error': 'timestamp required'}), BAD_REQUEST
+            return jsonify({'error': 'amount required'}), BAD_REQUEST
         
         data = Voltage.query.order_by(Voltage.id.desc()).limit(int(amount))
 
@@ -91,7 +91,7 @@ def register_routes(app):
             if not amount.isdigit():
                 return jsonify({'error': 'Invalid argument'}), BAD_REQUEST
         else:
-            return jsonify({'error': 'timestamp required'}), BAD_REQUEST
+            return jsonify({'error': 'amount required'}), BAD_REQUEST
         
         data = Current.query.order_by(Current.id.desc()).limit(int(amount))
 
@@ -137,6 +137,7 @@ def register_routes(app):
         return jsonify({'message': 'Success'}), CREATED
     
     
+    # Route to POST a new relay status
     @app.route('/relay/status', methods=['POST'])
     def post_relay_status():
         data = request.get_json()
@@ -151,6 +152,7 @@ def register_routes(app):
         return jsonify({'message': 'Success'}), CREATED
 
 
+    # Route to GET the latest relay status
     @app.route('/relay/status', methods=['GET'])
     def get_relay_status_latest():
         data = Relay.query.order_by(Relay.id.desc()).first()
