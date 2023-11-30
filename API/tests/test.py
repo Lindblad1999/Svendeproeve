@@ -3,8 +3,10 @@ from app import create_app, db
 
 class APITestCase(unittest.TestCase):
 
+
     # Set up the environment that the tests will run in
     def setUp(self):
+        self.API_KEY = "secretkey1" 
         self.app = create_app()
         self.app_context = self.app.app_context()
         self.app_context.push()
@@ -13,7 +15,7 @@ class APITestCase(unittest.TestCase):
 
     # Test that a voltage meas can be posted correctly
     def test_voltage_post_success(self):
-        response = self.client.post('/voltage', json={'meas': 9.5, 'device_id': 1})
+        response = self.client.post(f'/voltage?apikey={self.API_KEY}', json={'meas': 9.5, 'device_id': 1})
         self.assertEqual(response.status_code, 201)
     
     # Test that a voltage meas post with invalid data will respond with appropriate codes
