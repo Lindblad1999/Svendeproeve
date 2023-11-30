@@ -46,11 +46,14 @@ class APITestCase(unittest.TestCase):
     
     # Check that current closest responds with correct codes for success and error
     def test_current_get_closest(self):
+        # Correct request
         response = self.client.get(f'/current/closest?apikey={self.API_KEY}&timestamp=2023-11-21T16:01:00')
         self.assertEqual(response.status_code, 200)
 
+        # Request with invalid argument
         response = self.client.get(f'/current/closest?apikey={self.API_KEY}&timestamp=2023-11-2')
         self.assertEqual(response.status_code, 400)
 
+        # Request with no argument
         response = self.client.get(f'/current/closest?apikey={self.API_KEY}')
         self.assertEqual(response.status_code, 400)
