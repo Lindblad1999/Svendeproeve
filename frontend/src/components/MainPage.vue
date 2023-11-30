@@ -4,8 +4,16 @@
     </div>
     <div id="main-device">
         <div id="power-consumption-current">
-            <h2 id="power-consumption">Current power consumption</h2>
-            <p id="latest-wattage">{{ latestWattage }} Watts</p>
+            <h2 class="power-consumption-current-content">Current power consumption</h2>
+            <p class="power-consumption-current-content">{{ latestWattage }} Watts</p>
+        </div>
+        <div id="energy-price">
+            <h3 class="energy-price-content">Current energy price</h3>
+            <p class="energy-price-content">{{ energyPrice }} kr. pr. kWh</p>
+        </div>
+        <div id="current-device-cost">
+            <h3 class="current-device-cost-content">Current device cost</h3>
+            <p class="current-device-cost-content">{{ deviceCost }} kr.</p>
         </div>
     </div>
 </template>
@@ -22,11 +30,14 @@ export default {
             latestVoltage: 0,
             latestCurrent: 0,
             latestWattage: 0,
-            value: 0
+            energyPrice: 0,
+            deviceCost: 0
         };
     },
     mounted() {
         setInterval(this.getLatestWattage, 1000);
+        this.getEnergyPrice();
+        setInterval(this.currentDeviceCost, 1000)
     },
     methods:{
         getLatestVoltage() {
@@ -42,9 +53,17 @@ export default {
         getLatestWattage() {
             this.getLatestVoltage();
             this.getLatestCurrent();
-            console.log(`volt: ${this.latestVoltage}`)
-            console.log(`current: ${this.latestCurrent}`)
             this.latestWattage = (this.latestVoltage * this.latestCurrent).toFixed(5);
+        },
+        getEnergyPrice() {
+            let month = new Date().getMonth() + 1;
+            let day = String(new Date().getDate()).padStart(2, '0');
+            axios.get(`https://www.elprisenligenu.dk/api/v1/prices/2023/${month}-${day}_DK1.json`)
+                .then(response => this.energyPrice = response.data[0].DKK_per_kWh)
+        },
+        currentDeviceCost() {
+            let kwh = this.latestWattage / 3600;
+            this.deviceCost = (kwh * this.energyPrice).toFixed(6);
         }
     }
 }
@@ -63,19 +82,37 @@ export default {
         border: 5px dotted;
         margin-left: 25%;
     }
-
-    #latest-wattage {
-        text-align: center;
-    }
-
-    #power-consumption {
-        text-align: center;
-    }
-
+    
     #power-consumption-current {
         background-color: gray;
         width: 70%;
         margin: 0 auto;
         border-radius: 25px;
+    }
+    
+    .power-consumption-current-content {
+        text-align: center;
+    }
+
+    #energy-price {
+        background-color: gray;
+        width: 40%;
+        margin: 0 auto;
+        border-radius: 20px;
+    }
+
+    .energy-price-content {
+        text-align: center;
+    }
+
+    #current-device-cost {
+        background-color: gray;
+        width: 40%;
+        margin: 0 auto;
+        border-radius: 20px;
+    }
+
+    .current-device-cost-content {
+        text-align: center;
     }
 </style>
