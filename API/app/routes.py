@@ -11,7 +11,7 @@ NOT_FOUND   = 404
 def register_routes(app):
     @app.route('/', methods=['GET'])
     def home():
-        return "Home!"
+        return "Energy meter home!"
 
     # Route that returns the voltage measurement 
     # closest to the date and time given in the 
@@ -30,7 +30,7 @@ def register_routes(app):
             'meas': resp.meas,
             'meas_time': resp.meas_time,
             'device_id': resp.device_id
-        }), 200
+        }), OK
 
 
     # Route that returns the current measurement 
@@ -52,6 +52,65 @@ def register_routes(app):
             'meas_time': resp.meas_time,
             'device_id': resp.device_id
         }), 200
+    
+
+    # Route that returns all entries since the
+    # date end time given in the GET request
+    @app.route('voltage/since', methods=['GET'])
+    def get_voltage_since():
+        timestamp = request.args.get('timestamp')
+
+        # Check that a timestamp argument has been given in the request
+        # and check that timestamp is valid
+        if timestamp:
+            try:
+                requested_time = datetime.fromisoformat(timestamp)
+            except ValueError:
+                return jsonify({'error': 'Invalid argument'}), BAD_REQUEST
+        else:
+            return jsonify({'error': 'timestamp required'}), BAD_REQUEST
+        
+        data = Voltage.query.filter(Voltage.meas_time > timestamp).all()
+
+        data_list = [{
+            'id': d.id,
+            'meas': d.meas,
+            'meas_time': d.meas_time,
+            'device_id': d.device_id
+        } for d in data
+        ]
+
+        return jsonify(data_list), OK
+    
+
+    # Route that returns all entries since the
+    # date end time given in the GET request
+    @app.route('current/since', methods=['GET'])
+    def get_current_since():
+        timestamp = request.args.get('timestamp')
+
+        # Check that a timestamp argument has been given in the request
+        # and check that timestamp is valid
+        if timestamp:
+            try:
+                requested_time = datetime.fromisoformat(timestamp)
+            except ValueError:
+                return jsonify({'error': 'Invalid argument'}), BAD_REQUEST
+        else:
+            return jsonify({'error': 'timestamp required'}), BAD_REQUEST
+        
+        data = Current.query.filter(Current.meas_time > timestamp).all()
+
+        data_list = [{
+            'id': d.id,
+            'meas': d.meas,
+            'meas_time': d.meas_time,
+            'device_id': d.device_id
+        } for d in data
+        ]
+
+        return jsonify(data_list), OK
+
 
     # Route to POST a voltage measurement
     @app.route('/voltage', methods=['POST'])
@@ -64,9 +123,10 @@ def register_routes(app):
             db.session.commit() 
         except Exception as e:
             app.logger.error(f"Error: {str(e)}")
-            return jsonify({'message': 'Invalid request'}), 400
+            return jsonify({'message': 'Invalid request'}), BAD_REQUEST
 
-        return jsonify({'message': 'Success'}), 201
+        return jsonify({'message': 'Success'}), CREATED
+
 
     # Route to POST a current measurement
     @app.route('/current', methods=['POST'])
@@ -78,9 +138,9 @@ def register_routes(app):
             db.session.add(current)
             db.session.commit() 
         except:
-            return jsonify({'message': 'Inalid request'}), 400
+            return jsonify({'message': 'Inalid request'}), BAD_REQUEST
 
-        return jsonify({'message': 'Success'}), 201
+        return jsonify({'message': 'Success'}), CREATED
     
 
 def get_closest_meas(model, timestamp):
@@ -103,7 +163,7 @@ def get_closest_meas(model, timestamp):
                                 .order_by(model.meas_time.asc())\
                                 .first()
 
-    # Get the closest timestamp of the two
+    # Get the closest timestamp of the two retrieved. If only one has been retrieved, return that one
     if closest_before and closest_after:
         diff_before = requested_time - closest_before.meas_time
         diff_after = closest_after.meas_time - requested_time
