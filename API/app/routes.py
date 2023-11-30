@@ -56,7 +56,7 @@ def register_routes(app):
 
     # Route that returns all entries since the
     # date end time given in the GET request
-    @app.route('voltage/since', methods=['GET'])
+    @app.route('/voltage/since', methods=['GET'])
     def get_voltage_since():
         timestamp = request.args.get('timestamp')
 
@@ -70,7 +70,7 @@ def register_routes(app):
         else:
             return jsonify({'error': 'timestamp required'}), BAD_REQUEST
         
-        data = Voltage.query.filter(Voltage.meas_time > timestamp).all()
+        data = Voltage.query.filter(Voltage.meas_time > requested_time).all()
 
         data_list = [{
             'id': d.id,
@@ -85,7 +85,7 @@ def register_routes(app):
 
     # Route that returns all entries since the
     # date end time given in the GET request
-    @app.route('current/since', methods=['GET'])
+    @app.route('/current/since', methods=['GET'])
     def get_current_since():
         timestamp = request.args.get('timestamp')
 
@@ -99,7 +99,7 @@ def register_routes(app):
         else:
             return jsonify({'error': 'timestamp required'}), BAD_REQUEST
         
-        data = Current.query.filter(Current.meas_time > timestamp).all()
+        data = Current.query.filter(Current.meas_time > requested_time).all()
 
         data_list = [{
             'id': d.id,
