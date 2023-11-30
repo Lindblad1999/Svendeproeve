@@ -116,7 +116,6 @@ def register_routes(app):
             db.session.add(voltage)
             db.session.commit() 
         except Exception as e:
-            app.logger.error(f"Error: {str(e)}")
             return jsonify({'message': 'Invalid request'}), BAD_REQUEST
 
         return jsonify({'message': 'Success'}), CREATED

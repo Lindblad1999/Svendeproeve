@@ -53,6 +53,11 @@ export default {
         setInterval(this.getRelayStatus, 1000);
     },
     methods:{
+        getLatestWattage() {
+            this.getLatestVoltage();
+            this.getLatestCurrent();
+            this.latestWattage = (this.latestVoltage * this.latestCurrent).toFixed(5);
+        },
         getLatestVoltage() {
             this.dateTime = new Date().toISOString().replace(".", ":").slice(0, -5);
             axios.get(`${API_URL}/voltage/closest?timestamp=${this.dateTime}`)
@@ -62,11 +67,6 @@ export default {
             this.dateTime = new Date().toISOString().replace(".", ":").slice(0, -5);
             axios.get(`${API_URL}/current/closest?timestamp=${this.dateTime}`)
                 .then(response => this.latestCurrent = Math.abs(response.data.meas))
-        },
-        getLatestWattage() {
-            this.getLatestVoltage();
-            this.getLatestCurrent();
-            this.latestWattage = (this.latestVoltage * this.latestCurrent).toFixed(5);
         },
         getEnergyPrice() {
             let month = new Date().getMonth() + 1;
