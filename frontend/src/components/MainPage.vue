@@ -19,12 +19,16 @@
             <h2 class="total-device-cost-content">Total device cost</h2>
             <p class="total-device-cost-content">{{ totalCost }} kr.</p>
         </div>
+        <div id="relay-control">
+            <button id="button-toggle" @click="toggleOnOff">{{ relayStatus }}</button>
+        </div>
     </div>
 </template>
 
 
 <script>
 import API_URL from '@/constants'
+const DEVICE_ID = 2;
 import axios from 'axios'
 export default {
     data() {
@@ -36,7 +40,8 @@ export default {
             latestWattage: 0,
             energyPrice: 0,
             deviceCost: 0,
-            totalCost: 0
+            totalCost: 0,
+            relayStatus: "ON",
         };
     },
     mounted() {
@@ -45,6 +50,7 @@ export default {
         setInterval(this.currentDeviceCost, 1000);
         this.calcTotalCost();
         setInterval(this.updateTotalCost, 1000);
+        setInterval(this.getRelayStatus, 1000);
     },
     methods:{
         getLatestVoltage() {
@@ -91,6 +97,23 @@ export default {
         },
         updateTotalCost(){
             this.totalCost = (parseFloat(this.totalCost) + parseFloat(this.deviceCost)).toFixed(6);
+        },
+        toggleOnOff(){
+            let postData= {
+                state: this.relayStatus === "ON" ? 1 : 0, 
+                device_id: DEVICE_ID
+            };
+            axios.post(`${API_URL}/relay/status`, postData);
+        },
+        getRelayStatus(){
+            axios.get(`${API_URL}/relay/status`)
+                .then( response => {
+                    if (response.data.state){
+                        this.relayStatus = "OFF";
+                    } else {
+                        this.relayStatus = "ON";
+                    }
+                })
         }
     }
 }
@@ -152,5 +175,16 @@ export default {
 
     .total-device-cost-content {
         text-align: center;
+    }
+
+    #relay-control {
+        display: flex;
+        justify-content: center;
+    }
+
+    #button-toggle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
     }
 </style>
