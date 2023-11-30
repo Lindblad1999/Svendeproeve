@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <ArduinoJson.h>
 #include "config.h"
 
+const String API_ADDRESS = "https://svendeproeve-api-7b4ec1c0ab8f.herokuapp.com";
 const String VOLTAGE_POST_ENDPOINT = "https://svendeproeve-api-7b4ec1c0ab8f.herokuapp.com/voltage";
 const String CURRENT_POST_ENDPOINT = "https://svendeproeve-api-7b4ec1c0ab8f.herokuapp.com/current";
 
@@ -18,6 +20,18 @@ void setup() {
     delay(500);
   }
   Serial.println("Connected to Wifi");
+
+  // Post a relay status log that tells relay is ON
+  if (WiFi.status() == WL_CONNECTED) {
+  HTTPClient http;
+  http.begin(API_ADDRESS + "/relay/status");
+  http.addHeader("Content-type", "application/json");
+
+  char requestString[128];
+  sprintf(requestString, "{\"state\":%d, \"device_id\":%d}", 1, device_id);
+  int httpResponseCode = http.POST(requestString);
+  http.end();
+}
   
 }
 
@@ -33,10 +47,30 @@ float calculate_voltage(int rawData) {
 }
 
 float calculate_current(int rawData) {
-  float current = (float)rawData - 2200;
-  current = current / 4096 * 3.3;
+  float current;
+  // Check if the relay PIN is high or low
+  // If high, calculate the current. If low return 0, as the sensor is too unprecise. 
+  if (digitalRead(GPIO_NUM_22) == 1){
+    current = (float)rawData - 2200;
+    current = current / 4096 * 3.3;
+  } else {
+    current = 0.0;
+  }
   
   return current;
+}
+
+void handle_relay_get(String response){
+  DynamicJsonDocument doc(1024);
+  deserializeJson(doc, response);
+
+  int state = doc["state"];
+  if (state == 1){
+    digitalWrite(GPIO_NUM_22, HIGH);
+  } 
+  else if (state == 0) {
+    digitalWrite(GPIO_NUM_22, LOW);
+  }
 }
 
 void loop() {
@@ -64,7 +98,17 @@ void loop() {
     http.end();
   }
 
-  delay(1000);
+  if (WiFi.status() == WL_CONNECTED) {
+  HTTPClient http;
+  http.begin(API_ADDRESS + "/relay/status");
 
+  int httpResponseCode = http.GET();
+  if (httpResponseCode > 0) {
+    handle_relay_get(http.getString());
+  }
+  http.end();
+}
+
+  delay(1000);
 }
 
