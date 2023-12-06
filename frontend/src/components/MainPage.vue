@@ -54,13 +54,17 @@ export default {
         setInterval(this.getRelayStatus, 1000);
     },
     methods:{
+        // Calculate the Wattage of the latest database entries
         getLatestWattage() {
             this.getLatestVoltage();
             this.getLatestCurrent();
-            this.latestWattage = (this.latestVoltage * this.latestCurrent).toFixed(5);
+            this.latestWattage = (this.latestVoltage * this.latestCurrent).toFixed(5); // Set max amount of decimals to 5
         },
+        // Get the latest voltage measurement from the database
         getLatestVoltage() {
+            // Get current datatime and format it for query
             this.dateTime = new Date().toISOString().replace(".", ":").slice(0, -5);
+            // Send API GET request to get voltage measurement closest to current datetime
             axios.get(`${API_URL}/voltage/closest?apikey=${API_KEY}&timestamp=${this.dateTime}`)
                 .then(response => this.latestVoltage = response.data.meas)
         },
