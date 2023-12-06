@@ -84,6 +84,7 @@ def register_routes(app):
         amount = request.args.get('amount')
         apikey = request.args.get('apikey')
 
+        # Authorize the request using the API key
         if verify_ApiKey(apikey) == False:
             return jsonify({'message': 'Unauthorized'})
 
@@ -95,8 +96,10 @@ def register_routes(app):
         else:
             return jsonify({'error': 'amount required'}), BAD_REQUEST
         
+        # Query the database for the latest "amount" entries. 
         data = Voltage.query.order_by(Voltage.id.desc()).limit(int(amount))
 
+        # Create the list of data to be returned
         data_list = [{
             'id': d.id,
             'meas': d.meas,
@@ -143,11 +146,14 @@ def register_routes(app):
     def post_voltage():
         apikey = request.args.get('apikey')
 
+        # Authorize the request using the API key
         if verify_ApiKey(apikey) == False:
             return jsonify({'message': 'Unauthorized'})
 
+        # Get the data sent in the request, to be saved in the database
         data = request.get_json()
 
+        # Create instance of Voltage with values in request and add it to the database
         try:
             voltage = Voltage(meas=float(data['meas']), meas_time=datetime.now(), device_id=int(data['device_id']))
             db.session.add(voltage)

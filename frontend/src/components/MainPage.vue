@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1>Smart Home Energy Meter</h1>
+        <h1>SmartWatt</h1>
     </div>
     <div id="main-device">
         <div id="power-consumption-current">
